@@ -2,10 +2,10 @@ mod extractor;
 mod store;
 
 use clap::Parser;
-use notify::{RecursiveMode, Result, Watcher};
-use serde::{de, Deserialize, Serialize};
-use std::{default, env, path::Path, thread::sleep};
 use log::{debug, error};
+use notify::{RecursiveMode, Result, Watcher};
+use serde::{Deserialize, Serialize};
+use std::{env, path::Path, thread::sleep};
 
 #[derive(Debug, Deserialize, Serialize)]
 struct Config {
@@ -51,7 +51,7 @@ fn event_cb(res: Result<notify::Event>, target: &str) {
         Err(e) => {
             println! {"watch error: {:?}", e};
             error!("watch error: {:?}", e);
-        },
+        }
     }
 }
 
@@ -92,7 +92,10 @@ fn construct_config_paths() -> (std::path::PathBuf, std::path::PathBuf) {
                 "Root access required since the HOME environment variable is not set: {:?}",
                 e
             );
-            error!("Root access required since the HOME environment variable is not set: {:?}", e)
+            error!(
+                "Root access required since the HOME environment variable is not set: {:?}",
+                e
+            )
         }
     }
     let config_dir_str = format!("{}/.config/pdfTitleParser/", home);
@@ -118,7 +121,7 @@ fn main() {
 
     let mut default_source = String::from("");
     let mut default_target = String::from("");
-    
+
     // if config file not present set default values
     if !config_file.exists() {
         debug!("Config file not found, setting default values");
@@ -141,7 +144,6 @@ fn main() {
         None => default_target.to_string(),
     };
 
-
     // on first run, create config file
     init_config(&source, &target, &config_dir, &config_file);
 
@@ -154,7 +156,6 @@ fn main() {
         config.target = target.to_string();
         update_config(&config_file, &config);
     }
-
 
     let config = read_config(&config_file);
 

@@ -1,6 +1,6 @@
+use log::error;
 use pdf::error::PdfError;
 use pdf::file::FileOptions;
-use log::error;
 
 pub fn extract_title(file_path: &str) -> Result<String, PdfError> {
     if !file_path.ends_with(".pdf") {
@@ -19,8 +19,8 @@ pub fn extract_title(file_path: &str) -> Result<String, PdfError> {
         Ok(f) => f,
         Err(e) => {
             error!("Error opening file: {}", e);
-            return Ok(file_path.to_string())
-        },
+            return Ok(file_path.to_string());
+        }
     };
 
     if let Some(ref info) = file.trailer.info_dict {
@@ -29,7 +29,7 @@ pub fn extract_title(file_path: &str) -> Result<String, PdfError> {
             None => {
                 error!("No title found");
                 Err(PdfError::from("No title found".to_string()))
-            },
+            }
         };
     }
     error!("No info dictionary found");
