@@ -4,11 +4,21 @@ mod store;
 use notify::{RecursiveMode, Result, Watcher};
 use serde::{Deserialize, Serialize};
 use std::{env, path::Path};
+use clap::Parser;
 
 #[derive(Debug, Deserialize, Serialize)]
 struct Config {
     source: String,
     target: String,
+}
+
+#[derive(Parser)]
+#[command(version, about, long_about = None)]
+struct CliInput {
+    #[arg(short = 's', long = "sourcePath")]
+    source_path: Option<std::path::PathBuf>,
+    #[arg(short = 't', long = "targetPath")]
+    target_path: Option<std::path::PathBuf>,
 }
 
 fn event_cb(res: Result<notify::Event>, target: &str) {
@@ -31,6 +41,7 @@ fn init_config(
     config_dir: &std::path::PathBuf,
     config_file: &std::path::PathBuf,
 ) {
+
     // if config file does not exist, create it
     if !config_file.exists() {
         std::fs::create_dir_all(config_dir).expect("Could not create config directory");
@@ -75,8 +86,16 @@ fn construct_config_paths() -> (std::path::PathBuf, std::path::PathBuf) {
 }
 
 fn main() {
-    let source = "/home/pdfs/";
-    let target = "/home/pdfs/";
+    let args = CliInput::parse();
+
+    let default_source = "/home/pdfs/";
+    let default_target = "/home/pdfs/";
+
+    let binding = args.source_path.unwrap();
+    let source = binding.to_str().unwrap_or(default_source);
+
+    let binding = args.target_path.unwrap();
+    let target = binding.to_str().unwrap_or(default_target);
 
     let (config_dir, config_file) = construct_config_paths();
 
