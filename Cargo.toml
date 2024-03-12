@@ -1,5 +1,5 @@
 [package]
-name = "bibliography_parser"
+name = "pdfparser"
 version = "0.1.0"
 edition = "2021"
 authors = ["D4ykoo"]

@@ -85,22 +85,37 @@ fn construct_config_paths() -> (std::path::PathBuf, std::path::PathBuf) {
     (config_dir.to_path_buf(), config_file.to_path_buf())
 }
 
+fn update_config(config_file: &std::path::PathBuf, config: &Config) {
+    let config = toml::to_string(&config).expect("Could not serialize config");
+    std::fs::write(config_file, config).expect("Could not write config file");
+}
+
 fn main() {
     let args = CliInput::parse();
 
     let default_source = "/home/pdfs/";
     let default_target = "/home/pdfs/";
 
-    let binding = args.source_path.unwrap();
-    let source = binding.to_str().unwrap_or(default_source);
+    let binding = args.source_path.unwrap_or(default_source.into());
+    let source = binding.to_str().unwrap();
 
-    let binding = args.target_path.unwrap();
-    let target = binding.to_str().unwrap_or(default_target);
+    let binding = args.target_path.unwrap_or(default_target.into());
+    let target = binding.to_str().unwrap();
 
     let (config_dir, config_file) = construct_config_paths();
 
     // on first run, create config file
     init_config(source, target, &config_dir, &config_file);
+
+    // update config if source or target paths have changed
+    let mut config = read_config(&config_file);
+
+    if config.source != source || config.target != target {
+        config.source = source.to_string();
+        config.target = target.to_string();
+        update_config(&config_file, &config);
+    }
+
     let config = read_config(&config_file);
 
     loop {
