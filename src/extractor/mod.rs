@@ -2,7 +2,20 @@ use pdf::error::PdfError;
 use pdf::file::FileOptions;
 
 pub fn extract_title(file_path: &str) -> Result<String, PdfError> {
-    let file = FileOptions::uncached().open(file_path).unwrap();
+    if !file_path.ends_with(".pdf") {
+        return Err(PdfError::from("Not a pdf file".to_string()));
+    }
+
+    if !std::path::Path::new(file_path).exists() {
+        return Ok("".to_string());
+    }
+
+    let res = FileOptions::uncached().open(file_path);
+
+    let file = match res {
+        Ok(f) => f,
+        Err(_) => return Ok(file_path.to_string()),
+    };
 
     if let Some(ref info) = file.trailer.info_dict {
         return match &info.title {
@@ -23,6 +36,7 @@ pub fn parse_title(title: &str) -> String {
     title = title.replace('\t', " ");
     title = title.replace("  ", " ");
     title = title.replace(' ', "_");
+    title = title.replace('-', "_");
 
     title = title.trim().to_lowercase().to_string();
 

@@ -4,7 +4,7 @@ mod store;
 use clap::Parser;
 use notify::{RecursiveMode, Result, Watcher};
 use serde::{Deserialize, Serialize};
-use std::{env, path::Path};
+use std::{env, path::Path, thread::sleep};
 
 #[derive(Debug, Deserialize, Serialize)]
 struct Config {
@@ -24,11 +24,24 @@ struct CliInput {
 fn event_cb(res: Result<notify::Event>, target: &str) {
     match res {
         Ok(event) => {
-            if event.kind.is_create() {
-                let path = event.paths[0].to_str().unwrap();
-                let raw_title = extractor::extract_title(path).unwrap();
+            if event.kind.is_create() || event.kind.is_modify() && !event.kind.is_remove() {
+                let path_str = event.paths[0].to_str().unwrap();
+                let mut path = path_str.to_string();
+
+                if path_str.contains(".crdownload") {
+                    sleep(std::time::Duration::from_secs(2));
+                    path = path_str.replace(".crdownload", "");
+                }
+
+                if path_str.contains(".part") {
+                    sleep(std::time::Duration::from_secs(2));
+                    path = path_str.replace(".part", "");
+                }
+
+                let raw_title = extractor::extract_title(&path).unwrap();
                 let title = extractor::parse_title(&raw_title);
-                store::save_pdf(path, &format!("{}/{}.pdf", target, title)).unwrap();
+
+                store::save_pdf(&path, &format!("/{}/{}.pdf", target, title));
             }
         }
         Err(e) => println! {"watch error: {:?}", e},
