@@ -1,12 +1,15 @@
+use log::error;
 use pdf::error::PdfError;
 use pdf::file::FileOptions;
 
 pub fn extract_title(file_path: &str) -> Result<String, PdfError> {
     if !file_path.ends_with(".pdf") {
+        error!("Not a pdf file: {}", file_path);
         return Err(PdfError::from("Not a pdf file".to_string()));
     }
 
     if !std::path::Path::new(file_path).exists() {
+        error!("File not found: {}", file_path);
         return Ok("".to_string());
     }
 
@@ -14,15 +17,22 @@ pub fn extract_title(file_path: &str) -> Result<String, PdfError> {
 
     let file = match res {
         Ok(f) => f,
-        Err(_) => return Ok(file_path.to_string()),
+        Err(e) => {
+            error!("Error opening file: {}", e);
+            return Ok(file_path.to_string());
+        }
     };
 
     if let Some(ref info) = file.trailer.info_dict {
         return match &info.title {
             Some(title) => Ok(title.to_string()?),
-            None => Err(PdfError::from("No title found".to_string())),
+            None => {
+                error!("No title found");
+                Err(PdfError::from("No title found".to_string()))
+            }
         };
     }
+    error!("No info dictionary found");
     Err(PdfError::from("No info dictionary found".to_string()))
 }
 
