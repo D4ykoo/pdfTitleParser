@@ -3,8 +3,9 @@ mod store;
 
 use clap::Parser;
 use notify::{RecursiveMode, Result, Watcher};
-use serde::{Deserialize, Serialize};
-use std::{env, path::Path, thread::sleep};
+use serde::{de, Deserialize, Serialize};
+use std::{default, env, path::Path, thread::sleep};
+use log::{debug, error};
 
 #[derive(Debug, Deserialize, Serialize)]
 struct Config {
@@ -24,6 +25,7 @@ struct CliInput {
 fn event_cb(res: Result<notify::Event>, target: &str) {
     match res {
         Ok(event) => {
+            debug!("event: {:?}", event);
             if event.kind.is_create() || event.kind.is_modify() && !event.kind.is_remove() {
                 let path_str = event.paths[0].to_str().unwrap();
                 let mut path = path_str.to_string();
@@ -31,11 +33,13 @@ fn event_cb(res: Result<notify::Event>, target: &str) {
                 if path_str.contains(".crdownload") {
                     sleep(std::time::Duration::from_secs(2));
                     path = path_str.replace(".crdownload", "");
+                    debug!(".crdownload: {:?}", path);
                 }
 
                 if path_str.contains(".part") {
                     sleep(std::time::Duration::from_secs(2));
                     path = path_str.replace(".part", "");
+                    debug!(".part: {:?}", path);
                 }
 
                 let raw_title = extractor::extract_title(&path).unwrap();
@@ -44,7 +48,10 @@ fn event_cb(res: Result<notify::Event>, target: &str) {
                 store::save_pdf(&path, &format!("/{}/{}.pdf", target, title));
             }
         }
-        Err(e) => println! {"watch error: {:?}", e},
+        Err(e) => {
+            println! {"watch error: {:?}", e};
+            error!("watch error: {:?}", e);
+        },
     }
 }
 
@@ -70,7 +77,7 @@ fn read_config(config_file: &std::path::PathBuf) -> Config {
     // if config file exists, read it
     let config = std::fs::read_to_string(config_file).expect("Could not read config file");
     let config: Config = toml::from_str(&config).expect("Could not parse config file");
-
+    debug!("Config read: \n{:?}", &config);
     config
 }
 
@@ -85,13 +92,12 @@ fn construct_config_paths() -> (std::path::PathBuf, std::path::PathBuf) {
                 "Root access required since the HOME environment variable is not set: {:?}",
                 e
             );
+            error!("Root access required since the HOME environment variable is not set: {:?}", e)
         }
     }
-    // create config dir
     let config_dir_str = format!("{}/.config/pdfTitleParser/", home);
     let config_dir = std::path::Path::new(&config_dir_str);
 
-    // create config file
     let config_file_str = format!("{}config.toml", config_dir_str);
     let config_file = std::path::Path::new(&config_file_str);
     (config_dir.to_path_buf(), config_file.to_path_buf())
@@ -99,34 +105,56 @@ fn construct_config_paths() -> (std::path::PathBuf, std::path::PathBuf) {
 
 fn update_config(config_file: &std::path::PathBuf, config: &Config) {
     let config = toml::to_string(&config).expect("Could not serialize config");
-    std::fs::write(config_file, config).expect("Could not write config file");
+    std::fs::write(config_file, &config).expect("Could not write config file");
+    debug!("Config updated: \n{}", &config);
 }
 
 fn main() {
+    env_logger::init();
+
     let args = CliInput::parse();
-
-    let default_source = "/home/pdfs/";
-    let default_target = "/home/pdfs/";
-
-    let binding = args.source_path.unwrap_or(default_source.into());
-    let source = binding.to_str().unwrap();
-
-    let binding = args.target_path.unwrap_or(default_target.into());
-    let target = binding.to_str().unwrap();
 
     let (config_dir, config_file) = construct_config_paths();
 
+    let mut default_source = String::from("");
+    let mut default_target = String::from("");
+    
+    // if config file not present set default values
+    if !config_file.exists() {
+        debug!("Config file not found, setting default values");
+        default_source.push_str("/home/pdfs/");
+        default_target.push_str("/home/pdfs/");
+    } else {
+        debug!("Config file found, reading values");
+        let config = read_config(&config_file);
+        default_source = config.source;
+        default_target = config.target;
+    }
+
+    let source = match args.source_path {
+        Some(path) => path.to_string_lossy().into_owned(),
+        None => default_source.to_string(),
+    };
+
+    let target = match args.target_path {
+        Some(path) => path.to_string_lossy().into_owned(),
+        None => default_target.to_string(),
+    };
+
+
     // on first run, create config file
-    init_config(source, target, &config_dir, &config_file);
+    init_config(&source, &target, &config_dir, &config_file);
 
-    // update config if source or target paths have changed
+    // update source and target of config file
+    // if source or target are different from the config file
+    // dont fall to default values
     let mut config = read_config(&config_file);
-
     if config.source != source || config.target != target {
         config.source = source.to_string();
         config.target = target.to_string();
         update_config(&config_file, &config);
     }
+
 
     let config = read_config(&config_file);
 
