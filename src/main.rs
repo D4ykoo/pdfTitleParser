@@ -1,10 +1,10 @@
 mod extractor;
 mod store;
 
+use clap::Parser;
 use notify::{RecursiveMode, Result, Watcher};
 use serde::{Deserialize, Serialize};
 use std::{env, path::Path};
-use clap::Parser;
 
 #[derive(Debug, Deserialize, Serialize)]
 struct Config {
@@ -41,7 +41,6 @@ fn init_config(
     config_dir: &std::path::PathBuf,
     config_file: &std::path::PathBuf,
 ) {
-
     // if config file does not exist, create it
     if !config_file.exists() {
         std::fs::create_dir_all(config_dir).expect("Could not create config directory");
