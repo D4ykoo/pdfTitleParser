@@ -66,7 +66,7 @@ fn construct_config_paths() -> (std::path::PathBuf, std::path::PathBuf) {
         }
     }
     // create config dir
-    let config_dir_str = format!("{}/.config/pdfNameParser/", home);
+    let config_dir_str = format!("{}/.config/pdfTitleParser/", home);
     let config_dir = std::path::Path::new(&config_dir_str);
 
     // create config file
