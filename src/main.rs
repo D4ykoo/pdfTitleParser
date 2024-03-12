@@ -1,10 +1,10 @@
 mod extractor;
 mod store;
 
+
 use notify::{RecursiveMode, Result, Watcher};
-use std::{env, path::Path};
-use dotenv::dotenv;
 use serde::{Deserialize, Serialize};
+use std::{env, path::Path};
 
 #[derive(Debug, Deserialize, Serialize)]
 struct Config {
@@ -26,10 +26,12 @@ fn event_cb(res: Result<notify::Event>, target: &str) {
     }
 }
 
-
-fn init_config(source_dir: &str, target_dir: &str, config_dir: &std::path::PathBuf, config_file: &std::path::PathBuf) {
-
-
+fn init_config(
+    source_dir: &str,
+    target_dir: &str,
+    config_dir: &std::path::PathBuf,
+    config_file: &std::path::PathBuf,
+) {
     // if config file does not exist, create it
     if !config_file.exists() {
         std::fs::create_dir_all(config_dir).expect("Could not create config directory");
@@ -47,7 +49,7 @@ fn read_config(config_file: &std::path::PathBuf) -> Config {
     let config = std::fs::read_to_string(config_file).expect("Could not read config file");
     let config: Config = toml::from_str(&config).expect("Could not parse config file");
 
-    return config;
+    config
 }
 
 fn construct_config_paths() -> (std::path::PathBuf, std::path::PathBuf) {
@@ -57,8 +59,11 @@ fn construct_config_paths() -> (std::path::PathBuf, std::path::PathBuf) {
         Ok(val) => home.push_str(&val),
         Err(e) => {
             home.push_str("/etc/");
-            println!("Root access required since the HOME environment variable is not set: {:?}", e);
-        },
+            println!(
+                "Root access required since the HOME environment variable is not set: {:?}",
+                e
+            );
+        }
     }
     // create config dir
     let config_dir_str = format!("{}/.config/pdfNameParser/", home);
@@ -67,7 +72,7 @@ fn construct_config_paths() -> (std::path::PathBuf, std::path::PathBuf) {
     // create config file
     let config_file_str = format!("{}config.toml", config_dir_str);
     let config_file = std::path::Path::new(&config_file_str);
-    return (config_dir.to_path_buf(), config_file.to_path_buf())
+    (config_dir.to_path_buf(), config_file.to_path_buf())
 }
 
 fn main() {
@@ -82,7 +87,7 @@ fn main() {
 
     loop {
         let target = config.target.clone();
-         let mut watcher = notify::recommended_watcher(move |res| event_cb(res, &target)).unwrap();
+        let mut watcher = notify::recommended_watcher(move |res| event_cb(res, &target)).unwrap();
         let _ = watcher.watch(Path::new(&config.source), RecursiveMode::Recursive);
     }
 }
