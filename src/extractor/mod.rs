@@ -1,7 +1,6 @@
 use pdf::error::PdfError;
 use pdf::file::FileOptions;
 
-
 pub fn extract_title(file_path: &str) -> Result<String, PdfError> {
     let file = FileOptions::uncached().open(file_path).unwrap();
 
