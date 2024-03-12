@@ -1,10 +1,10 @@
 mod extractor;
 mod store;
 
+use notify::{RecursiveMode, Result, Watcher};
 use std::path::Path;
-use notify::{Watcher, RecommendedWatcher, RecursiveMode, Result};
 
-fn event_cb(res: Result<notify::Event>){
+fn event_cb(res: Result<notify::Event>) {
     match res {
         Ok(event) => {
             if event.kind.is_create() {
@@ -13,8 +13,8 @@ fn event_cb(res: Result<notify::Event>){
                 let title = extractor::parse_title(&raw_title);
                 store::save_pdf(path, &format!("files/renamed/{}.pdf", title)).unwrap();
             }
-        },
-        Err(e) => println!{"watch error: {:?}", e}
+        }
+        Err(e) => println! {"watch error: {:?}", e},
     }
 }
 
