@@ -11,13 +11,13 @@ with the default paths:
 ## How to Run
 The application must be run manually, but then it listenes on the directory specified in the configuration.  
 Either in dev mode:  
-`cargo run -- [OPTIONAL] <src_dir> <target_dir>`  
+`cargo run -- [OPTIONAL] -s <src_dir> -t <target_dir>`  
 
 or production mode:  
 `cargo build -r`  
 and then run the executable in the target directory with:
 ```bash
-./pdfparser [OPTIONAL] <src_dir> <target_dir>
+./pdfparser [OPTIONAL] -s <src_dir> -t <target_dir>
 ```
 
 **IMPORTANT:**  
