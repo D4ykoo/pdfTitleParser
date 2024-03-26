@@ -9,7 +9,7 @@ pub fn extract_title(file_path: &str) -> Result<String, PdfError> {
     }
 
     if !std::path::Path::new(file_path).exists() {
-        error!("File not found: {}", file_path);
+        // error!("File not found: {}", file_path);
         return Ok("".to_string());
     }
 
@@ -25,7 +25,14 @@ pub fn extract_title(file_path: &str) -> Result<String, PdfError> {
 
     if let Some(ref info) = file.trailer.info_dict {
         return match &info.title {
-            Some(title) => Ok(title.to_string()?),
+            Some(title) => {
+                if title.to_string().unwrap().is_empty() {
+                    Ok(file_path.to_string())
+                } else {
+                    Ok(title.to_string().unwrap())
+                
+            }
+        },
             None => {
                 error!("No title found");
                 Err(PdfError::from("No title found".to_string()))

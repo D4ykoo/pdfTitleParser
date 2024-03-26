@@ -48,9 +48,9 @@ fn event_cb(res: Result<notify::Event>, target: &str) {
                 store::save_pdf(&path, &format!("/{}/{}.pdf", target, title));
             }
         }
-        Err(e) => {
-            println! {"watch error: {:?}", e};
-            error!("watch error: {:?}", e);
+        Err(_) => {
+            // println! {"watch error: {:?}", e};
+            // error!("watch error: {:?}", e);
         }
     }
 }
