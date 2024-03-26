@@ -30,9 +30,8 @@ pub fn extract_title(file_path: &str) -> Result<String, PdfError> {
                     Ok(file_path.to_string())
                 } else {
                     Ok(title.to_string().unwrap())
-                
+                }
             }
-        },
             None => {
                 error!("No title found");
                 Err(PdfError::from("No title found".to_string()))
