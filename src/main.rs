@@ -45,13 +45,10 @@ fn event_cb(res: Result<notify::Event>, target: &str) {
                 let raw_title = extractor::extract_title(&path).unwrap();
                 let title = extractor::parse_title(&raw_title);
 
-                store::save_pdf(&path, &format!("/{}/{}.pdf", target, title));
+                store::save_pdf(&path, &format!("{}{}.pdf", target, title));
             }
         }
-        Err(_) => {
-            // println! {"watch error: {:?}", e};
-            // error!("watch error: {:?}", e);
-        }
+        Err(_) => {}
     }
 }
 
@@ -138,7 +135,6 @@ fn main() {
         Some(path) => path.to_string_lossy().into_owned(),
         None => default_source.to_string(),
     };
-
     let target = match args.target_path {
         Some(path) => path.to_string_lossy().into_owned(),
         None => default_target.to_string(),

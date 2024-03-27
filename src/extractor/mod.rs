@@ -1,16 +1,19 @@
+use log::debug;
 use log::error;
 use pdf::error::PdfError;
 use pdf::file::FileOptions;
 
 pub fn extract_title(file_path: &str) -> Result<String, PdfError> {
+    let os_path = std::path::Path::new(file_path);
+    let file_name = os_path.file_name().unwrap().to_str().unwrap();
+
     if !file_path.ends_with(".pdf") {
-        error!("Not a pdf file: {}", file_path);
+        debug!("Not a pdf file: {}", file_path);
         return Err(PdfError::from("Not a pdf file".to_string()));
     }
 
     if !std::path::Path::new(file_path).exists() {
-        // error!("File not found: {}", file_path);
-        return Ok("".to_string());
+        return Ok(file_name.to_string());
     }
 
     let res = FileOptions::uncached().open(file_path);
@@ -26,11 +29,10 @@ pub fn extract_title(file_path: &str) -> Result<String, PdfError> {
     if let Some(ref info) = file.trailer.info_dict {
         return match &info.title {
             Some(title) => {
-                if title.to_string().unwrap().is_empty() {
-                    Ok(file_path.to_string())
-                } else {
-                    Ok(title.to_string().unwrap())
+                if title.to_string().unwrap_or("".to_string()) == "" {
+                    return Ok(file_name.to_string());
                 }
+                Ok(title.to_string()?)
             }
             None => {
                 error!("No title found");
@@ -45,7 +47,7 @@ pub fn extract_title(file_path: &str) -> Result<String, PdfError> {
 pub fn parse_title(title: &str) -> String {
     let mut title = title.to_string();
 
-    title.retain(|c| !r#"(),".;:'"#.contains(c));
+    title.retain(|c| !r#"(),";:'"#.contains(c));
 
     title = title.replace('\n', " ");
     title = title.replace('\r', " ");
@@ -55,6 +57,7 @@ pub fn parse_title(title: &str) -> String {
     title = title.replace('-', "_");
 
     title = title.trim().to_lowercase().to_string();
-
+    // remove .pdf extension
+    title = title.replace(".pdf", "");
     title
 }
