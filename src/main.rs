@@ -45,7 +45,7 @@ fn event_cb(res: Result<notify::Event>, target: &str) {
                 let raw_title = extractor::extract_title(&path).unwrap();
                 let title = extractor::parse_title(&raw_title);
 
-                store::save_pdf(&path, &format!("/{}/{}.pdf", target, title));
+                store::save_pdf(&path, &format!("{}{}.pdf", target, title));
             }
         }
         Err(e) => {
