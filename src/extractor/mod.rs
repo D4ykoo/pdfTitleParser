@@ -1,5 +1,4 @@
 use log::debug;
-use crate::debug;
 use log::error;
 use pdf::error::PdfError;
 use pdf::file::FileOptions;
@@ -27,16 +26,13 @@ pub fn extract_title(file_path: &str) -> Result<String, PdfError> {
         }
     };
 
-
-
     if let Some(ref info) = file.trailer.info_dict {
         return match &info.title {
             Some(title) => {
                 if title.to_string().unwrap_or("".to_string()) == "" {
                     return Ok(file_name.to_string());
                 }
-                Ok(title.to_string()?) 
-                
+                Ok(title.to_string()?)
             }
             None => {
                 error!("No title found");
