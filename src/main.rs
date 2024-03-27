@@ -48,9 +48,7 @@ fn event_cb(res: Result<notify::Event>, target: &str) {
                 store::save_pdf(&path, &format!("{}{}.pdf", target, title));
             }
         }
-        Err(e) => {
-            println! {"watch error: {:?}", e};
-            error!("watch error: {:?}", e);
+        Err(_) => {
         }
     }
 }
@@ -138,7 +136,7 @@ fn main() {
         Some(path) => path.to_string_lossy().into_owned(),
         None => default_source.to_string(),
     };
-
+  
     let target = match args.target_path {
         Some(path) => path.to_string_lossy().into_owned(),
         None => default_target.to_string(),
